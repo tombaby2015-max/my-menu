@@ -362,6 +362,7 @@
             <div class="current-date" id="currentDate"></div>
             <div class="controls-panel">
                 <button class="control-btn" id="loadMenuBtn" onclick="loadMenuFromTxt()">Загрузить меню</button>
+                <button class="control-btn" onclick="saveCurrentMenuToCloud()" style="background: #ff4444;">💾 Сохранить текущее меню в облако</button>
             </div>
         </div>
         
@@ -1711,10 +1712,18 @@ function handleMouseClick(productName) {
     selectProduct(productName);
 }
 
+        function saveCurrentMenuToCloud() {
+    console.log('💾 Принудительное сохранение меню...');
+    saveToCloud().then(() => {
+        console.log('✅ Текущее меню сохранено в облако');
+        alert('Текущее меню сохранено в облако!');
+    });
+}
 
 </script>
 </body>
 </html>
+
 
 
 
