@@ -610,25 +610,29 @@ function loadFromCloud() {
         
         // Создаем callback функцию
         window.cloudLoadCallback = function(response) {
-            if (response.success && response.data) {
-                try {
-                    const savedData = JSON.parse(response.data);
-                    
-                    menuData = savedData.menuData || {};
-                    kbjuTable = savedData.kbjuTable || {};
-                    mealTimes = savedData.mealTimes || {};
-                    
-                    console.log('✅ Данные загружены из облака');
-                    resolve(true);
-                } catch (error) {
-                    console.error('❌ Ошибка парсинга данных:', error);
-                    reject(error);
-                }
-            } else {
-                console.warn('⚠️ Нет данных в облаке или ошибка:', response.error);
-                resolve(false); // Не reject, а resolve(false) чтобы продолжить с локальными данными
-            }
-        };
+    console.log('📨 Ответ от облака:', response);
+    
+    if (response.success && response.data) {
+        try {
+            console.log('📝 Данные получены:', response.data);
+            const savedData = JSON.parse(response.data);
+            console.log('📊 Распарсенные данные:', savedData);
+            
+            menuData = savedData.menuData || {};
+            kbjuTable = savedData.kbjuTable || {};
+            mealTimes = savedData.mealTimes || {};
+            
+            console.log('✅ Данные загружены из облака');
+            resolve(true);
+        } catch (error) {
+            console.error('❌ Ошибка парсинга данных:', error);
+            reject(error);
+        }
+    } else {
+        console.warn('⚠️ Нет данных в облаке или ошибка:', response.error);
+        resolve(false);
+    }
+};
         
         // Создаем script тег для обхода CORS
         const script = document.createElement('script');
@@ -1692,6 +1696,7 @@ function handleMouseClick(productName) {
 </script>
 </body>
 </html>
+
 
 
 
