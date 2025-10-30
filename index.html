@@ -608,9 +608,13 @@ async function saveToCloud() {
 async function loadFromCloud() {
     try {
         console.log('📥 Загрузка из облака...');
+        console.log('URL:', CLOUD_STORAGE_URL);
         
         const response = await fetch(CLOUD_STORAGE_URL + '?action=load');
+        console.log('Response status:', response.status);
+        
         const result = await response.json();
+        console.log('Result:', result);
         
         if (result.success && result.data) {
             const savedData = JSON.parse(result.data);
@@ -642,21 +646,29 @@ async function autoLoadFromCloud() {
     }
 }
 
-        function init() {
+function init() {
     console.log('🚀 Запуск приложения...');
     
     // Сначала пробуем загрузить из облака
-    autoLoadFromCloud().then(() => {
-        // Если не удалось загрузить из облака, используем локальные данные
-        loadSavedData();
-        createDayNavigation();
-        showDayData(currentDay);
-        updateKbjuTableDisplay();
-        
-        console.log('✅ Приложение запущено');
+    loadFromCloud().then(success => {
+        if (success) {
+            console.log('✅ Данные загружены из облака');
+            // Обновляем интерфейс с облачными данными
+            loadSavedData();
+            createDayNavigation();
+            showDayData(currentDay);
+            updateKbjuTableDisplay();
+        } else {
+            console.log('⚠️ Используем локальные данные');
+            // Используем данные по умолчанию или из localStorage
+            loadSavedData();
+            createDayNavigation();
+            showDayData(currentDay);
+            updateKbjuTableDisplay();
+        }
     }).catch(error => {
-        // Если ошибка, используем только локальные данные
-        console.warn('Используем локальные данные:', error);
+        console.error('❌ Ошибка при загрузке из облака:', error);
+        // При ошибке используем локальные данные
         loadSavedData();
         createDayNavigation();
         showDayData(currentDay);
@@ -665,12 +677,9 @@ async function autoLoadFromCloud() {
     
     // Сохраняем при закрытии страницы
     window.addEventListener('beforeunload', function() {
-        if (autoSaveEnabled) {
-            // Сохраняем синхронно при закрытии
-            saveToCloud().catch(error => {
-                console.error('Ошибка сохранения при закрытии:', error);
-            });
-        }
+        saveToCloud().catch(error => {
+            console.error('Ошибка сохранения при закрытии:', error);
+        });
     });
 }
 
@@ -1671,4 +1680,5 @@ function handleMouseClick(productName) {
 </script>
 </body>
 </html>
+
 
