@@ -1,0 +1,1547 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Меню на неделю</title>
+    <style>
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-card: #2d2d2d;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --accent: #4a9eff;
+            --accent-hover: #3a8eef;
+            --border: #404040;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 20px;
+            line-height: 1.4;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .current-date {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .controls-panel {
+            display: flex;
+            gap: 15px;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .days-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .day-btn {
+            flex: 1;
+            padding: 15px 10px;
+            border: none;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            border-bottom: 3px solid transparent;
+        }
+
+        .day-btn.active {
+            background: var(--accent);
+            color: white;
+            border-bottom: 3px solid var(--accent-hover);
+        }
+
+        .menu-content {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+        }
+
+        .menu-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--accent);
+            text-align: center;
+        }
+
+        .nutrition-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 20px;
+        }
+
+        .nutrition-table th {
+            background: var(--accent);
+            color: white;
+            padding: 10px 4px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .nutrition-table td {
+            padding: 6px 4px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .nutrition-table tr:nth-child(even) {
+            background: var(--bg-secondary);
+        }
+
+        .meal-total-row {
+            background: var(--bg-secondary) !important;
+            font-weight: bold;
+            border-top: 2px solid var(--accent);
+        }
+
+        .day-total-row {
+            background: var(--accent) !important;
+            color: white;
+            font-weight: bold;
+        }
+
+       
+        .weight-input {
+            width: 50px;
+            padding: 2px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        .delete-btn {
+            width: 18px;
+            height: 18px;
+            border: 1px solid white;
+            border-radius: 50%;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.7;
+            margin-left: 5px;
+        }
+
+        .ingredient-cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left !important;
+}
+
+        .meal-spacer {
+            height: 15px;
+            background: transparent !important;
+            border: none !important;
+        }
+
+        .calculations-section, .kbju-table-section {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+            display: none;
+        }
+
+        .section-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--accent);
+            text-align: center;
+        }
+
+        .ingredient-not-found {
+            background-color: #ff4444 !important;
+            color: white !important;
+            border: 1px solid #ff0000 !important;
+        }
+
+        .ingredient-suggest {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .suggest-btn {
+            width: 18px;
+            height: 18px;
+            border: 1px solid #ff4444;
+            border-radius: 50%;
+            background: #ff4444;
+            color: white;
+            cursor: pointer;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 5px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .suggestions-dropdown {
+            position: fixed;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            min-width: 200px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+        }
+
+        .suggestion-item:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .time-cell {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .time-display {
+            padding: 4px 8px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+
+        .time-display:hover {
+            background-color: var(--accent);
+        }
+
+        .time-dropdown {
+            position: fixed;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            z-index: 1000;
+            max-height: 150px;
+            overflow-y: auto;
+            width: 80px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .time-option {
+            padding: 6px 8px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .time-option:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .time-option:last-child {
+            border-bottom: none;
+        }
+    
+.ingredient-header {
+    position: relative;
+}
+
+.add-ingredient-header-btn {
+    position: absolute;
+    right: 5px;
+    bottom: 3px;
+    width: 18px;
+    height: 18px;
+    background: #00aa00;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dish-cell {
+    position: relative;
+}
+
+.dish-add-btn {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    width: 18px;
+    height: 18px;
+    background: #00aa00;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+
+</style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="current-date" id="currentDate"></div>
+            <div class="controls-panel">
+                <button class="control-btn" id="loadMenuBtn" onclick="loadMenuFromTxt()">Загрузить меню</button>
+            </div>
+        </div>
+        
+        <div class="days-navigation" id="daysNav"></div>
+        
+        <div class="menu-content" id="menuContent">
+            <div class="menu-title" id="menuTitle">Меню на понедельник</div>
+            <table class="nutrition-table" id="menuTable">
+                <thead>
+                    <thead>
+    
+    <tr>
+        <th>Время</th>
+        <th>Приём пищи</th>
+        <th>Блюдо</th>
+        <th>Состав блюда</th>
+        <th>Вес</th>
+        <th>Б</th>
+        <th>Ж</th>
+        <th>У</th>
+        <th>ККл</th>
+        <th>Приготовление</th>
+    
+
+</thead>
+                </thead>
+                <tbody id="menuTableBody">
+                    <!-- Данные будут добавляться здесь -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="calculations-section" id="calculationsSection">
+            <div class="section-title">Подсчет продуктов на неделю</div>
+            <div id="calculationsContent">
+                <!-- Данные подсчетов будут здесь -->
+            </div>
+        </div>
+
+        <div class="kbju-table-section" id="kbjuTableSection">
+            <div class="section-title">Таблица КБЖУ продуктов</div>
+            <button class="control-btn" onclick="loadKbjuFromTxt()" style="margin-bottom: 20px;">Загрузить таблицу КБЖУ</button>
+<button class="control-btn" onclick="showAddProductModal()" style="margin-bottom: 20px;">Добавить продукт</button>            
+<div id="kbjuTableContent">
+                <!-- Таблица КБЖУ будет здесь -->
+            </div>
+        </div>
+    </div>
+
+<!-- Модальное окно добавления продукта -->
+<div id="addProductModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+    <div style="background: var(--bg-card); padding: 30px; border-radius: 10px; width: 400px; border: 1px solid var(--border);">
+        <h3 style="margin-bottom: 20px; color: var(--accent); text-align: center;">Добавить новый продукт</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+            <label>Название продукта:</label>
+            <input type="text" id="newProductName" style="background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border); padding: 8px; border-radius: 5px;">
+            
+            <label>Белки (г):</label>
+            <input type="number" step="0.1" id="newProductProteins" style="background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border); padding: 8px; border-radius: 5px;">
+            
+            <label>Жиры (г):</label>
+            <input type="number" step="0.1" id="newProductFats" style="background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border); padding: 8px; border-radius: 5px;">
+            
+            <label>Углеводы (г):</label>
+            <input type="number" step="0.1" id="newProductCarbs" style="background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border); padding: 8px; border-radius: 5px;">
+            
+            <label>Ккал:</label>
+            <input type="number" step="0.1" id="newProductCalories" style="background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border); padding: 8px; border-radius: 5px;">
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+    <button class="control-btn" onclick="addNewProduct()" id="modalActionButton">Добавить</button>
+    <button class="control-btn" onclick="deleteProduct()" id="modalDeleteButton" style="background: #ff4444; display: none;">Удалить</button>
+    <button class="control-btn" onclick="hideAddProductModal()" style="background: var(--bg-secondary);">Отмена</button>
+</div>
+    </div>
+</div>
+
+<!-- Модальное окно выбора продукта -->
+<div id="productSelectModal" style="display: none; position: fixed; top: 0; left: 0; 
+width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2100; 
+justify-content: center; align-items: center;">
+    <div style="background: var(--bg-card); padding: 20px; border-radius: 10px; 
+    border: 1px solid var(--border); max-height: 80vh; overflow: hidden; display: flex; flex-direction: column;">
+        <h3 style="margin-bottom: 10px; color: var(--accent); text-align: center;">Выберите продукт</h3>
+        <div id="productSelectTableContainer" style="overflow-y: auto; flex-grow: 1; border: 1px solid var(--border); border-radius: 5px; max-height: 400px;">
+            <!-- таблица с продуктами будет сгенерирована скриптом -->
+        </div>
+        <div style="text-align: center; margin-top: 10px;">
+            <button class="control-btn" style="background: var(--bg-secondary);" onclick="closeProductSelectModal()">Отмена</button>
+        </div>
+    </div>
+</div>
+
+
+    <script>
+        // Базовая структура данных
+        let menuData = {
+            'Понедельник': {
+                'Завтрак': {
+                    dish: 'Омлет с овощами',
+                    ingredients: [
+                        { name: 'Яйца', weight: 100, proteins: 13, fats: 11, carbs: 1, calories: 155 },
+                        { name: 'Помидоры', weight: 100, proteins: 1, fats: 0, carbs: 4, calories: 20 }
+                    ],
+                    recipe: 'Взбейте яйца, обжарьте с помидорами'
+                }
+            }
+        };
+
+        // Таблица КБЖУ продуктов (эталонная)
+        let kbjuTable = {};
+
+        const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
+        const mealTimes = {
+            'Завтрак': '08:00',
+            'Обед': '13:00', 
+            'Ужин': '19:00'
+        };
+
+let calculationsBtn;
+let kbjuBtn;
+
+        let currentDay = 'Понедельник';
+
+        function saveData() {
+            localStorage.setItem('savedMenuData', JSON.stringify(menuData));
+            localStorage.setItem('savedKbjuTable', JSON.stringify(kbjuTable));
+            localStorage.setItem('savedMealTimes', JSON.stringify(mealTimes));
+        }
+
+        function loadSavedData() {
+            // Загружаем сохраненные настройки времени
+            const savedMealTimes = localStorage.getItem('savedMealTimes');
+            if (savedMealTimes) {
+                Object.assign(mealTimes, JSON.parse(savedMealTimes));
+            }
+            
+            const savedMenuData = localStorage.getItem('savedMenuData');
+            const savedKbjuTable = localStorage.getItem('savedKbjuTable');
+            
+            if (savedMenuData) {
+                try {
+                    const parsedData = JSON.parse(savedMenuData);
+                    // Обновляем структуру данных для старых записей
+                    Object.values(parsedData).forEach(day => {
+                        Object.values(day).forEach(meal => {
+                            meal.ingredients.forEach(ingredient => {
+                                if (!ingredient.originalName) {
+                                    ingredient.originalName = ingredient.name;
+                                }
+                                if (!ingredient.status) {
+                                    ingredient.status = kbjuTable[ingredient.name] ? 'exact' : 'not_found';
+                                }
+                                if (!ingredient.suggestions) {
+                                    ingredient.suggestions = [];
+                                }
+                            });
+                        });
+                    });
+                    menuData = parsedData;
+                } catch (e) {
+                    console.error('Ошибка парсинга menuData:', e);
+                }
+            }
+            
+            if (savedKbjuTable) {
+                try {
+                    kbjuTable = JSON.parse(savedKbjuTable);
+                    // Включаем кнопку загрузки меню если таблица КБЖУ загружена
+                    const loadMenuBtn = document.getElementById('loadMenuBtn');
+                    if (loadMenuBtn) {
+                        loadMenuBtn.disabled = false;
+                    }
+                } catch (e) {
+                    console.error('Ошибка парсинга kbjuTable:', e);
+                }
+            } else {
+                const loadMenuBtn = document.getElementById('loadMenuBtn');
+                if (loadMenuBtn) {
+                    loadMenuBtn.disabled = true;
+                }
+            }
+        }
+
+        function init() {
+            loadSavedData();
+            createDayNavigation();
+            showDayData(currentDay);
+            updateKbjuTableDisplay();
+        }
+
+        function createDayNavigation() {
+            const daysNav = document.getElementById('daysNav');
+            daysNav.innerHTML = '';
+            
+            days.forEach(day => {
+                const button = document.createElement('button');
+                button.className = `day-btn ${day === currentDay ? 'active' : ''}`;
+                button.textContent = day.substring(0, 2);
+                button.onclick = () => {
+                    currentDay = day;
+                    document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('active'));
+                    updateActiveNavigation(button);
+                    showDayData(day);
+                };
+                daysNav.appendChild(button);
+            });
+
+            calculationsBtn = document.createElement('button');
+            calculationsBtn.className = 'day-btn';
+            calculationsBtn.textContent = 'Подсчеты';
+            calculationsBtn.onclick = showCalculations;
+            daysNav.appendChild(calculationsBtn);
+
+            kbjuBtn = document.createElement('button');
+            kbjuBtn.className = 'day-btn';
+            kbjuBtn.textContent = 'Список продуктов';
+            kbjuBtn.onclick = showKbjuTable;
+            daysNav.appendChild(kbjuBtn);
+        }
+
+        function showDayData(dayName) {
+            document.getElementById('menuContent').style.display = 'block';
+            document.getElementById('calculationsSection').style.display = 'none';
+            document.getElementById('kbjuTableSection').style.display = 'none';
+
+            const tableBody = document.getElementById('menuTableBody');
+            const dayData = menuData[dayName] || {};
+            
+            let html = '';
+            let dayTotal = { proteins: 0, fats: 0, carbs: 0, calories: 0 };
+
+            Object.entries(dayData).forEach(([meal, mealData]) => {
+                const mealTime = mealTimes[meal] || '';
+                const mealTotal = calculateMealTotal(mealData.ingredients);
+                const ingredientCount = mealData.ingredients.length;
+                
+                if (ingredientCount === 0) return;
+
+                dayTotal.proteins += mealTotal.proteins;
+                dayTotal.fats += mealTotal.fats;
+                dayTotal.carbs += mealTotal.carbs;
+                dayTotal.calories += mealTotal.calories;
+
+                // Первая строка с объединенными ячейками
+                const firstIngredient = mealData.ingredients[0];
+                html += `
+                    <tr>
+                        <td rowspan="${ingredientCount + 1}" class="time-cell">
+                            <div class="time-display" onclick="showTimeDropdown(this, '${dayName}', '${meal}')">
+                                ${mealTime || '--:--'}
+                            </div>
+                        </td>
+                        <td rowspan="${ingredientCount + 1}">${meal}</td>
+                        <td rowspan="${ingredientCount + 1}" class="dish-cell">
+    ${mealData.dish}
+    <button class="dish-add-btn" onclick="openProductSelectModal('${dayName}', '${meal}')">+</button>
+
+</td>
+                        <td class="ingredient-cell ${firstIngredient.status === 'not_found' ? 'ingredient-not-found' : ''}">
+                            ${firstIngredient.originalName || firstIngredient.name}
+                            ${firstIngredient.status !== 'exact' ? 
+                                `<button class="suggest-btn" onclick="showSuggestions(this, '${dayName}', '${meal}', 0)">?</button>` : 
+                                `<button class="delete-btn" onclick="deleteIngredient('${dayName}', '${meal}', 0)">✕</button>`
+                            }
+                        </td>
+                        <td>
+                            <input type="number" class="weight-input" value="${firstIngredient.weight}" 
+                                   onchange="updateWeight('${dayName}', '${meal}', 0, this.value)">
+                        </td>
+                        <td>${firstIngredient.proteins.toFixed(1)}</td>
+                        <td>${firstIngredient.fats.toFixed(1)}</td>
+                        <td>${firstIngredient.carbs.toFixed(1)}</td>
+                        <td>${firstIngredient.calories.toFixed(1)}</td>
+                        <td rowspan="${ingredientCount + 1}">${mealData.recipe}</td>
+                    </tr>`;
+
+                // Остальные ингредиенты
+                for (let i = 1; i < ingredientCount; i++) {
+                    const ingredient = mealData.ingredients[i];
+                    html += `
+                        <tr>
+                            <td class="ingredient-cell ${ingredient.status === 'not_found' ? 'ingredient-not-found' : ''}">
+                                ${ingredient.originalName || ingredient.name}
+                                ${ingredient.status !== 'exact' ? 
+                                    `<button class="suggest-btn" onclick="showSuggestions(this, '${dayName}', '${meal}', ${i})">?</button>` : 
+                                    `<button class="delete-btn" onclick="deleteIngredient('${dayName}', '${meal}', ${i})">✕</button>`
+                                }
+                            </td>
+                            <td>
+                                <input type="number" class="weight-input" value="${ingredient.weight}" 
+                                       onchange="updateWeight('${dayName}', '${meal}', ${i}, this.value)">
+                            </td>
+                            <td>${ingredient.proteins.toFixed(1)}</td>
+                            <td>${ingredient.fats.toFixed(1)}</td>
+                            <td>${ingredient.carbs.toFixed(1)}</td>
+                            <td>${ingredient.calories.toFixed(1)}</td>
+                        </tr>`;
+                }
+
+                
+                // Итог по приему пищи
+                html += `
+                    <tr class="meal-total-row">
+                        <td colspan="1" style="text-align: right;">Итого ${meal}:</td>
+                        <td></td>
+                        <td>${mealTotal.proteins.toFixed(1)}</td>
+                        <td>${mealTotal.fats.toFixed(1)}</td>
+                        <td>${mealTotal.carbs.toFixed(1)}</td>
+                        <td>${mealTotal.calories.toFixed(1)}</td>
+                        
+                    </tr>
+                    <tr class="meal-spacer"><td colspan="10"></td></tr>`;
+            });
+
+            // Общий итог дня
+            html += `
+                <tr class="day-total-row">
+                    <td colspan="4" style="text-align: right;">ВСЕГО за день:</td>
+                    <td></td>
+                    <td>${dayTotal.proteins.toFixed(1)}</td>
+                    <td>${dayTotal.fats.toFixed(1)}</td>
+                    <td>${dayTotal.carbs.toFixed(1)}</td>
+                    <td>${dayTotal.calories.toFixed(1)}</td>
+                    
+                </tr>`;
+
+            tableBody.innerHTML = html;
+            document.getElementById('menuTitle').textContent = `Меню на ${dayName.toLowerCase()}`;
+        }
+
+        function calculateMealTotal(ingredients) {
+            let total = { proteins: 0, fats: 0, carbs: 0, calories: 0 };
+            ingredients.forEach(ingredient => {
+                total.proteins += ingredient.proteins;
+                total.fats += ingredient.fats;
+                total.carbs += ingredient.carbs;
+                total.calories += ingredient.calories;
+            });
+            return total;
+        }
+
+        function updateWeight(day, meal, index, newWeight) {
+            const weight = parseInt(newWeight) || 0;
+            const ingredient = menuData[day][meal].ingredients[index];
+            
+            ingredient.weight = weight;
+            
+            if (kbjuTable[ingredient.name]) {
+                const kbjuData = kbjuTable[ingredient.name];
+                const ratio = weight / 100;
+                
+                ingredient.proteins = kbjuData.proteins * ratio;
+                ingredient.fats = kbjuData.fats * ratio;
+                ingredient.carbs = kbjuData.carbs * ratio;
+                ingredient.calories = kbjuData.calories * ratio;
+            }
+            
+            showDayData(currentDay);
+        }
+
+function addIngredient(day, meal) {
+    if (!menuData[day]) menuData[day] = {};
+    if (!menuData[day][meal]) {
+        menuData[day][meal] = {
+            dish: 'Новое блюдо',
+            ingredients: [],
+            recipe: ''
+        };
+    }
+    
+    menuData[day][meal].ingredients.push({
+        name: 'Новый продукт',
+        originalName: 'Новый продукт',
+        weight: 100,
+        proteins: 0,
+        fats: 0,
+        carbs: 0,
+        calories: 0,
+        status: 'not_found',
+        suggestions: []
+    });
+    
+    saveData(); // ← Сохраняем изменения
+    showDayData(currentDay);
+}
+        function deleteIngredient(day, meal, index) {
+    if (confirm('Удалить этот ингредиент?')) {
+        menuData[day][meal].ingredients.splice(index, 1);
+        saveData(); // ← ДОБАВЬ ЭТУ СТРОКУ
+        showDayData(currentDay);
+    }
+}
+
+        function showCalculations() {
+updateActiveNavigation(calculationsBtn);
+            document.getElementById('menuContent').style.display = 'none';
+            document.getElementById('calculationsSection').style.display = 'block';
+            document.getElementById('kbjuTableSection').style.display = 'none';
+            
+            const productCount = {};
+Object.values(menuData).forEach(day => {
+    Object.values(day).forEach(meal => {
+        meal.ingredients.forEach(ingredient => {
+            // Добавляем проверку статуса - только ингредиенты с точным совпадением
+            if (ingredient.status === 'exact') {
+                const productName = ingredient.name;
+                productCount[productName] = (productCount[productName] || 0) + ingredient.weight;
+            }
+        });
+    });
+});
+            
+            let html = '<table style="width: 100%; border-collapse: collapse;">';
+            html += '<tr><th style="text-align: left; padding: 10px; border-bottom: 1px solid var(--border);">Продукт</th><th style="text-align: left; padding: 10px; border-bottom: 1px solid var(--border);">Количество (гр)</th></tr>';
+            
+            Object.entries(productCount).forEach(([product, amount]) => {
+                html += `<tr><td style="padding: 8px; border-bottom: 1px solid var(--border);">${product}</td><td style="padding: 8px; border-bottom: 1px solid var(--border);">${Math.round(amount)}</td></tr>`;
+            });
+            
+            html += '</table>';
+            document.getElementById('calculationsContent').innerHTML = html;
+        }
+
+        function showKbjuTable() {
+updateActiveNavigation(kbjuBtn);
+            document.getElementById('menuContent').style.display = 'none';
+            document.getElementById('calculationsSection').style.display = 'none';
+            document.getElementById('kbjuTableSection').style.display = 'block';
+        }
+
+        function parseKbjuTxtData(content) {
+    const lines = content.split('\n');
+    let newProductsLoaded = 0;
+    let productsLoaded = 0; // Добавляем эту строку
+            
+            lines.forEach((line, index) => {
+                const cleanLine = line.trim();
+                
+                if (!cleanLine || 
+                    cleanLine.startsWith('Таблица КБЖУ') || 
+                    cleanLine.startsWith('№\t') ||
+                    cleanLine === '№\tНаименование\tБ\tЖ\tУ\tККл' ||
+                    cleanLine.startsWith('Наименование')) {
+                    return;
+                }
+                
+                const parts = cleanLine.split('\t').filter(part => part.trim());
+                
+                if (parts.length === 6) {
+                    try {
+                        const productName = parts[1].trim();
+                        const proteins = parseFloat(parts[2].replace(',', '.'));
+                        const fats = parseFloat(parts[3].replace(',', '.'));
+                        const carbs = parseFloat(parts[4].replace(',', '.'));
+                        const calories = parseFloat(parts[5].replace(',', '.'));
+                        
+                        if (!kbjuTable[productName]) {
+    kbjuTable[productName] = {
+        proteins: proteins,
+        fats: fats,
+        carbs: carbs,
+        calories: calories
+    };
+    newProductsLoaded++; // Убираем productsLoaded++, оставляем только newProductsLoaded++
+}
+                    } catch (error) {
+                        console.warn('Ошибка парсинга строки', index + 1, ':', cleanLine, error);
+                    }
+                }
+            });
+            
+            if (newProductsLoaded === 0) {
+    // Не бросаем ошибку, просто сообщаем что новых продуктов нет
+    console.log('Новых продуктов для добавления не найдено');
+}
+
+return newProductsLoaded; // ← Эту строку добавить в самый конец
+        }
+
+function updateKbjuTableDisplay() {
+    if (Object.keys(kbjuTable).length === 0) {
+        document.getElementById('kbjuTableContent').innerHTML = 
+            '<p style="text-align: center; color: var(--text-secondary); margin: 40px;">Таблица КБЖУ не загружена</p>';
+        return;
+    }
+    
+    let html = '<table style="width: 100%; border-collapse: collapse; margin-top: 20px;">';
+    html += '<tr><th style="text-align: center; padding: 10px; border-bottom: 2px solid var(--accent);">№</th><th style="text-align: left; padding: 10px; border-bottom: 2px solid var(--accent);">Продукт</th><th style="text-align: left; padding: 10px; border-bottom: 2px solid var(--accent);">Белки</th><th style="text-align: left; padding: 10px; border-bottom: 2px solid var(--accent);">Жиры</th><th style="text-align: left; padding: 10px; border-bottom: 2px solid var(--accent);">Углеводы</th><th style="text-align: left; padding: 10px; border-bottom: 2px solid var(--accent);">Ккал</th><th style="text-align: left; padding: 10px; border-bottom: 2px solid var(--accent);">Действия</th></tr>';
+    
+    Object.entries(kbjuTable).forEach(([product, data], index) => {
+        const formatValue = (num) => {
+            if (Number.isInteger(num)) return num.toString();
+            const rounded = Math.round(num * 10) / 10;
+            return rounded % 1 === 0 ? rounded.toString() : rounded.toFixed(1);
+        };
+        
+        html += `<tr>
+    <td style="text-align: center; padding: 8px; border-bottom: 1px solid var(--border);">${index + 1}</td>
+    <td style="padding: 8px; border-bottom: 1px solid var(--border);">${product}</td>
+    <td style="padding: 8px; border-bottom: 1px solid var(--border);">${formatValue(data.proteins)}</td>
+    <td style="padding: 8px; border-bottom: 1px solid var(--border);">${formatValue(data.fats)}</td>
+    <td style="padding: 8px; border-bottom: 1px solid var(--border);">${formatValue(data.carbs)}</td>
+    <td style="padding: 8px; border-bottom: 1px solid var(--border);">${formatValue(data.calories)}</td>
+    <td style="padding: 8px; border-bottom: 1px solid var(--border);">
+        <button class="control-btn" style="padding: 4px 8px; font-size: 12px;" onclick="editProductByIndex(${index})">Редактировать</button>
+    </td>
+</tr>`;
+    });
+    
+    html += '</table>';
+    document.getElementById('kbjuTableContent').innerHTML = html;
+}
+        function findProductInKbju(ingredientName) {
+            const exactMatch = Object.keys(kbjuTable).find(product => 
+                product.toLowerCase() === ingredientName.toLowerCase()
+            );
+            
+            if (exactMatch) {
+                return { match: exactMatch, type: 'exact' };
+            }
+            
+            const partialMatches = Object.keys(kbjuTable).filter(product => {
+                const productLower = product.toLowerCase();
+                const ingredientLower = ingredientName.toLowerCase();
+                
+                return productLower.includes(ingredientLower) || 
+                       ingredientLower.includes(productLower) ||
+                       productLower.split(/\s+/).some(word => ingredientLower.includes(word)) ||
+                       ingredientLower.split(/\s+/).some(word => productLower.includes(word));
+            });
+            
+            if (partialMatches.length > 0) {
+                return { match: partialMatches[0], type: 'partial', allMatches: partialMatches };
+            }
+            
+            return { match: null, type: 'not_found' };
+        }
+
+        function parseMenuTxtData(content) {
+            const lines = content.split('\n');
+            const newMenuData = {};
+            
+            let currentDay = '';
+            let currentMeal = '';
+            let currentDish = '';
+            let currentIngredients = [];
+            let currentRecipe = '';
+            let parsingIngredients = false;
+            let parsingRecipe = false;
+            
+            lines.forEach((line, index) => {
+                const cleanLine = line.trim();
+                
+                if (!cleanLine) return;
+                
+                const dayMatch = cleanLine.match(/^(Понедельник|Вторник|Среда|Четверг|Пятница|Суббота|Воскресенье)$/);
+                if (dayMatch) {
+                    if (currentDay && currentMeal) {
+                        saveMealToMenuData(newMenuData, currentDay, currentMeal, currentDish, currentIngredients, currentRecipe);
+                    }
+                    
+                    currentDay = dayMatch[0];
+                    currentMeal = '';
+                    currentDish = '';
+                    currentIngredients = [];
+                    currentRecipe = '';
+                    parsingIngredients = false;
+                    parsingRecipe = false;
+                    return;
+                }
+                
+                const mealMatch = cleanLine.match(/^(\d*й\s*)?(перекус|Завтрак|Обед|Ужин):?$/i);
+                if (mealMatch && currentDay) {
+                    if (currentMeal) {
+                        saveMealToMenuData(newMenuData, currentDay, currentMeal, currentDish, currentIngredients, currentRecipe);
+                    }
+                    
+                    const mealType = mealMatch[2].charAt(0).toUpperCase() + mealMatch[2].slice(1).toLowerCase();
+                    currentMeal = mealMatch[1] ? `${mealMatch[1]}${mealType}` : mealType;
+                    currentDish = '';
+                    currentIngredients = [];
+                    currentRecipe = '';
+                    parsingIngredients = false;
+                    parsingRecipe = false;
+                    return;
+                }
+                
+                if (currentDay && currentMeal) {
+                    if (!currentDish && !cleanLine.toLowerCase().includes('состав:') && 
+                        !cleanLine.toLowerCase().includes('кбжу:') && 
+                        !cleanLine.toLowerCase().includes('приготовление:')) {
+                        currentDish = cleanLine;
+                        return;
+                    }
+                    
+                    if (cleanLine.toLowerCase().includes('состав:')) {
+                        parsingIngredients = true;
+                        parsingRecipe = false;
+                        return;
+                    }
+                    
+                    if (cleanLine.toLowerCase().includes('кбжу:')) {
+                        parsingIngredients = false;
+                        return;
+                    }
+                    
+                    if (cleanLine.toLowerCase().includes('приготовление:')) {
+                        parsingRecipe = true;
+                        parsingIngredients = false;
+                        return;
+                    }
+                    
+                    if (parsingIngredients) {
+                        const ingredientMatch = cleanLine.match(/^([^–—\-]+)[–—\-]\s*(\d+)\s*г?$/);
+                        if (ingredientMatch) {
+                            const ingredientName = ingredientMatch[1].trim();
+                            const weight = parseInt(ingredientMatch[2]);
+                            
+                            const searchResult = findProductInKbju(ingredientName);
+                            
+                            if (searchResult.type === 'exact' || searchResult.type === 'partial') {
+                                const kbjuData = kbjuTable[searchResult.match];
+                                const ratio = weight / 100;
+                                currentIngredients.push({
+                                    name: searchResult.match,
+                                    originalName: ingredientName,
+                                    weight: weight,
+                                    proteins: kbjuData.proteins * ratio,
+                                    fats: kbjuData.fats * ratio,
+                                    carbs: kbjuData.carbs * ratio,
+                                    calories: kbjuData.calories * ratio,
+                                    status: searchResult.type === 'exact' ? 'exact' : 'partial',
+                                    suggestions: searchResult.allMatches || []
+                                });
+                            } else {
+                                currentIngredients.push({
+                                    name: ingredientName,
+                                    originalName: ingredientName,
+                                    weight: weight,
+                                    proteins: 0,
+                                    fats: 0,
+                                    carbs: 0,
+                                    calories: 0,
+                                    status: 'not_found',
+                                    suggestions: []
+                                });
+                            }
+                        }
+                        return;
+                    }
+                    
+                    if (parsingRecipe) {
+                        if (currentRecipe) {
+                            currentRecipe += ' ' + cleanLine;
+                        } else {
+                            currentRecipe = cleanLine;
+                        }
+                        return;
+                    }
+                }
+            });
+            
+            if (currentDay && currentMeal) {
+                saveMealToMenuData(newMenuData, currentDay, currentMeal, currentDish, currentIngredients, currentRecipe);
+            }
+            
+            return newMenuData;
+        }
+
+        function saveMealToMenuData(menuData, day, meal, dish, ingredients, recipe) {
+            if (!menuData[day]) menuData[day] = {};
+            
+            menuData[day][meal] = {
+                dish: dish,
+                ingredients: ingredients,
+                recipe: recipe
+            };
+        }
+
+        function loadMenuFromTxt() {
+            if (Object.keys(kbjuTable).length === 0) {
+                alert('Сначала загрузите таблицу КБЖУ!');
+                return;
+            }
+            
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.txt';
+            
+            fileInput.onchange = function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const content = e.target.result;
+                        const newMenuData = parseMenuTxtData(content);
+                        
+                        Object.keys(newMenuData).forEach(day => {
+                            if (!menuData[day]) {
+                                menuData[day] = {};
+                            }
+                            Object.keys(newMenuData[day]).forEach(meal => {
+                                menuData[day][meal] = newMenuData[day][meal];
+                            });
+                        });
+                        
+                        showDayData(currentDay);
+                        saveData();
+                        
+                        alert('Меню успешно загружено!');
+                    } catch (error) {
+                        console.error('Ошибка загрузки меню:', error);
+                        alert('Ошибка при загрузке меню: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            fileInput.click();
+        }
+
+        function showSuggestions(button, day, meal, index) {
+            const existingDropdowns = document.querySelectorAll('.suggestions-dropdown');
+            existingDropdowns.forEach(dropdown => dropdown.remove());
+            
+            const ingredient = menuData[day][meal].ingredients[index];
+            const suggestions = ingredient.suggestions.length > 0 ? 
+                ingredient.suggestions : 
+                Object.keys(kbjuTable).filter(product => 
+                    product.toLowerCase().includes(ingredient.originalName.toLowerCase()) ||
+                    ingredient.originalName.toLowerCase().includes(product.toLowerCase())
+                );
+            
+            const dropdown = document.createElement('div');
+            dropdown.className = 'suggestions-dropdown';
+            
+            suggestions.forEach(product => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.textContent = product;
+                item.onclick = function() {
+                    replaceIngredient(day, meal, index, product);
+                    dropdown.remove();
+                };
+                dropdown.appendChild(item);
+            });
+            
+            if (suggestions.length === 0) {
+                Object.keys(kbjuTable).forEach(product => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    item.textContent = product;
+                    item.onclick = function() {
+                        replaceIngredient(day, meal, index, product);
+                        dropdown.remove();
+                    };
+                    dropdown.appendChild(item);
+                });
+            }
+            
+            const buttonRect = button.getBoundingClientRect();
+            dropdown.style.position = 'fixed';
+            dropdown.style.left = buttonRect.left + 'px';
+            dropdown.style.top = (buttonRect.bottom + 5) + 'px';
+            
+            document.body.appendChild(dropdown);
+            
+            setTimeout(() => {
+                document.addEventListener('click', function closeDropdown(e) {
+                    if (!dropdown.contains(e.target) && e.target !== button) {
+                        dropdown.remove();
+                        document.removeEventListener('click', closeDropdown);
+                    }
+                });
+            }, 100);
+        }
+
+        function replaceIngredient(day, meal, index, newProductName) {
+            const ingredient = menuData[day][meal].ingredients[index];
+            const kbjuData = kbjuTable[newProductName];
+            const ratio = ingredient.weight / 100;
+            
+            ingredient.name = newProductName;
+            ingredient.originalName = newProductName;
+            ingredient.proteins = kbjuData.proteins * ratio;
+            ingredient.fats = kbjuData.fats * ratio;
+            ingredient.carbs = kbjuData.carbs * ratio;
+            ingredient.calories = kbjuData.calories * ratio;
+            ingredient.status = 'exact';
+            ingredient.suggestions = [];
+            
+            saveData();
+            showDayData(currentDay);
+        }
+
+        function loadKbjuFromTxt() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.txt';
+            
+            fileInput.onchange = function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const content = e.target.result;
+                        const newProductsCount = parseKbjuTxtData(content);
+                        updateKbjuTableDisplay();
+                        
+                        const loadMenuBtn = document.getElementById('loadMenuBtn');
+                        if (loadMenuBtn) {
+                            loadMenuBtn.disabled = false;
+                        }
+                        
+                        saveData();
+                        alert('Таблица КБЖУ успешно загружена! Добавлено новых продуктов: ' + newProductsCount + '. Всего продуктов в таблице: ' + Object.keys(kbjuTable).length);
+                    } catch (error) {
+                        console.error('Ошибка загрузки:', error);
+                        alert('Ошибка при загрузке таблицы КБЖУ: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            fileInput.click();
+        }
+
+function showTimeDropdown(element, day, meal) {
+    const existingDropdowns = document.querySelectorAll('.time-dropdown');
+    existingDropdowns.forEach(dropdown => dropdown.remove());
+    
+    const dropdown = document.createElement('div');
+    dropdown.className = 'time-dropdown';
+    
+    // Создаем варианты времени от 01:00 до 23:00 с шагом в 1 час
+    for (let hour = 1; hour <= 23; hour++) {
+        const timeString = `${hour.toString().padStart(2, '0')}:00`;
+        const option = document.createElement('div');
+        option.className = 'time-option';
+        option.textContent = timeString;
+        option.onclick = function(e) {
+            e.stopPropagation();
+            updateMealTime(day, meal, timeString);
+            dropdown.remove();
+        };
+        dropdown.appendChild(option);
+    }
+    
+    const noTimeOption = document.createElement('div');
+    noTimeOption.className = 'time-option';
+    noTimeOption.textContent = '--:--';
+    noTimeOption.onclick = function(e) {
+        e.stopPropagation();
+        updateMealTime(day, meal, '');
+        dropdown.remove();
+    };
+    dropdown.appendChild(noTimeOption);
+    
+    const rect = element.getBoundingClientRect();
+    dropdown.style.position = 'fixed';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.top = (rect.bottom + 5) + 'px';
+    
+    document.body.appendChild(dropdown);
+    
+    setTimeout(() => {
+        document.addEventListener('click', function closeDropdown(e) {
+            if (!dropdown.contains(e.target) && e.target !== element) {
+                dropdown.remove();
+                document.removeEventListener('click', closeDropdown);
+            }
+        });
+    }, 100);
+}        function updateMealTime(day, meal, newTime) {
+            mealTimes[meal] = newTime;
+            saveData();
+            showDayData(currentDay);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+
+function addIngredientFromHeader() {
+    if (currentDay && Object.keys(menuData[currentDay] || {}).length > 0) {
+        // Находим первый прием пищи текущего дня
+        const firstMeal = Object.keys(menuData[currentDay])[0];
+        addIngredient(currentDay, firstMeal);
+    } else {
+        alert('Сначала выберите день и прием пищи');
+    }
+}    
+
+function showAddProductModal() {
+    const modal = document.getElementById('addProductModal');
+    modal.style.display = 'flex';
+    
+    // Очищаем поля и фокусируемся на первом
+    document.getElementById('newProductName').value = '';
+    document.getElementById('newProductProteins').value = '';
+    document.getElementById('newProductFats').value = '';
+    document.getElementById('newProductCarbs').value = '';
+    document.getElementById('newProductCalories').value = '';
+    
+    document.getElementById('newProductName').focus();
+// Добавляем обработчик Esc для этого модального окна
+modal.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        hideAddProductModal();
+    }
+});
+}
+
+function hideAddProductModal() {
+    const modal = document.getElementById('addProductModal');
+    modal.style.display = 'none';
+    delete modal.dataset.editingProduct;
+    
+    // Сбрасываем кнопки к состоянию "Добавить"
+    document.getElementById('modalActionButton').textContent = 'Добавить';
+    document.getElementById('modalDeleteButton').style.display = 'none';
+}
+
+function addNewProduct() {
+    const modal = document.getElementById('addProductModal');
+    const name = document.getElementById('newProductName').value.trim();
+    const proteins = parseFloat(document.getElementById('newProductProteins').value) || 0;
+    const fats = parseFloat(document.getElementById('newProductFats').value) || 0;
+    const carbs = parseFloat(document.getElementById('newProductCarbs').value) || 0;
+    const calories = parseFloat(document.getElementById('newProductCalories').value) || 0;
+    
+    if (!name) {
+        alert('Введите название продукта');
+        return;
+    }
+    
+    const editingProduct = modal.dataset.editingProduct;
+    
+    if (editingProduct) {
+        // Редактирование существующего продукта
+        if (editingProduct !== name) {
+            // Если изменилось название - удаляем старый и создаем новый
+            delete kbjuTable[editingProduct];
+        }
+        kbjuTable[name] = {
+            proteins: proteins,
+            fats: fats,
+            carbs: carbs,
+            calories: calories
+        };
+    } else {
+        // Добавление нового продукта
+        kbjuTable[name] = {
+            proteins: proteins,
+            fats: fats,
+            carbs: carbs,
+            calories: calories
+        };
+    }
+    
+    // Сохраняем и обновляем отображение
+    saveData();
+    updateKbjuTableDisplay();
+    hideAddProductModal();
+    
+    alert('Продукт "' + name + '" успешно ' + (editingProduct ? 'обновлен' : 'добавлен') + '!');
+}
+function editProduct(productName) {
+    const productData = kbjuTable[productName];
+    
+    const modal = document.getElementById('addProductModal');
+    modal.style.display = 'flex';
+    
+    // Заполняем поля данными продукта
+    document.getElementById('newProductName').value = productName;
+    document.getElementById('newProductProteins').value = productData.proteins;
+    document.getElementById('newProductFats').value = productData.fats;
+    document.getElementById('newProductCarbs').value = productData.carbs;
+    document.getElementById('newProductCalories').value = productData.calories;
+    
+    // Сохраняем оригинальное название для редактирования
+    modal.dataset.editingProduct = productName;
+    
+    // Меняем кнопки для режима редактирования
+    document.getElementById('modalActionButton').textContent = 'Сохранить';
+    document.getElementById('modalDeleteButton').style.display = 'block';
+    
+    document.getElementById('newProductName').focus();
+}
+
+function deleteProduct() {
+    const modal = document.getElementById('addProductModal');
+    const productName = modal.dataset.editingProduct;
+    
+    if (productName && confirm(`Удалить продукт "${productName}"?`)) {
+        delete kbjuTable[productName];
+        saveData();
+        updateKbjuTableDisplay();
+        hideAddProductModal();
+        alert('Продукт удален!');
+    }
+}
+
+function editProductByIndex(index) {
+    const productName = Object.keys(kbjuTable)[index];
+    editProduct(productName);
+}
+
+// Закрытие модальных окон и выпадающих элементов по ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        // Модальное окно добавления продукта
+        const addProductModal = document.getElementById('addProductModal');
+        if (addProductModal && addProductModal.style.display === 'flex') {
+            hideAddProductModal();
+        }
+
+        // Модальное окно выбора продукта (новое)
+        const productSelectModal = document.getElementById('productSelectModal');
+        if (productSelectModal && productSelectModal.style.display === 'flex') {
+            closeProductSelectModal();
+        }
+
+        // Выпадающие меню подсказок
+        document.querySelectorAll('.suggestions-dropdown').forEach(dropdown => dropdown.remove());
+
+        // Выпадающие меню времени
+        document.querySelectorAll('.time-dropdown').forEach(dropdown => dropdown.remove());
+    }
+});
+
+
+function updateActiveNavigation(activeButton) {
+    // Убираем active со всех кнопок
+    document.querySelectorAll('.day-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Делаем активной переданную кнопку
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
+}
+
+let currentAddTarget = null; // запоминаем, куда добавлять продукт
+
+function openProductSelectModal(day, meal) {
+    currentAddTarget = { day, meal };
+    const modal = document.getElementById('productSelectModal');
+    const container = document.getElementById('productSelectTableContainer');
+
+    if (Object.keys(kbjuTable).length === 0) {
+        alert('Сначала загрузите таблицу КБЖУ!');
+        return;
+    }
+
+    // вычисляем ширину столбцов
+    const maxProductNameLength = Math.max(...Object.keys(kbjuTable).map(name => name.length), 10);
+    const productColWidth = `${maxProductNameLength * 8}px`; // ширина по длине текста
+    const nutrientColWidth = '80px'; // по ширине слова "Углеводы"
+
+    let html = `
+    <table style="
+        border-collapse: collapse; 
+        width: max-content; 
+        margin: 0 auto; 
+        border: 1px solid var(--border);
+    ">
+        <thead style="
+            position: sticky; 
+            top: 0; 
+            z-index: 5; 
+            background: var(--accent); 
+            box-shadow: 0 2px 3px rgba(0,0,0,0.4);
+        ">
+            <tr style="color: white; text-align: center;">
+                <th style="padding: 8px; border: 1px solid var(--border); text-align: left; min-width: ${productColWidth};">Продукт</th>
+                <th style="padding: 8px; border: 1px solid var(--border); min-width: ${nutrientColWidth};">Белки</th>
+                <th style="padding: 8px; border: 1px solid var(--border); min-width: ${nutrientColWidth};">Жиры</th>
+                <th style="padding: 8px; border: 1px solid var(--border); min-width: ${nutrientColWidth};">Углеводы</th>
+                <th style="padding: 8px; border: 1px solid var(--border); min-width: ${nutrientColWidth};">Ккал</th>
+            </tr>
+        </thead>
+        <tbody>
+`;
+
+
+    const products = Object.entries(kbjuTable);
+    products.forEach(([name, data]) => {
+        html += `
+            <tr class="product-row" 
+    style="cursor: pointer; text-align: center;"
+    ontouchstart="handleTouchStart(event, '${name.replace(/'/g, "\\'")}')"
+    ontouchmove="handleTouchMove(event)"
+    ontouchend="handleTouchEnd(event)"
+    onclick="handleMouseClick('${name.replace(/'/g, "\\'")}')">
+    <td style="padding: 6px; border: 1px solid var(--border); text-align: left;">${name}</td>
+    <td style="padding: 6px; border: 1px solid var(--border);">${data.proteins.toFixed(1)}</td>
+    <td style="padding: 6px; border: 1px solid var(--border);">${data.fats.toFixed(1)}</td>
+    <td style="padding: 6px; border: 1px solid var(--border);">${data.carbs.toFixed(1)}</td>
+    <td style="padding: 6px; border: 1px solid var(--border);">${data.calories.toFixed(1)}</td>
+</tr>
+
+
+        `;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+
+    modal.style.display = 'flex';
+}
+
+function closeProductSelectModal() {
+    document.getElementById('productSelectModal').style.display = 'none';
+    currentAddTarget = null;
+}
+
+function selectProduct(productName) {
+    if (!currentAddTarget) return;
+
+    const { day, meal } = currentAddTarget;
+    const kbjuData = kbjuTable[productName];
+    const weight = 100; // по умолчанию добавляем 100 г
+    const ratio = weight / 100;
+
+    const ingredient = {
+        name: productName,
+        originalName: productName,
+        weight: weight,
+        proteins: kbjuData.proteins * ratio,
+        fats: kbjuData.fats * ratio,
+        carbs: kbjuData.carbs * ratio,
+        calories: kbjuData.calories * ratio,
+        status: 'exact',
+        suggestions: []
+    };
+
+    menuData[day][meal].ingredients.push(ingredient);
+    saveData();
+    showDayData(currentDay);
+    closeProductSelectModal();
+}
+
+let touchStartY = 0;
+let touchMoved = false;
+let touchProduct = null;
+
+// начало касания
+function handleTouchStart(e, productName) {
+    touchStartY = e.touches[0].clientY;
+    touchMoved = false;
+    touchProduct = productName;
+}
+
+// движение пальцем (прокрутка)
+function handleTouchMove(e) {
+    const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
+    if (deltaY > 10) { // если движение больше 10 пикселей — считаем, что это скролл
+        touchMoved = true;
+    }
+}
+
+// конец касания
+function handleTouchEnd(e) {
+    if (!touchMoved && touchProduct) {
+        selectProduct(touchProduct); // короткий тап = выбор продукта
+    }
+    touchProduct = null;
+}
+
+// обработка клика мышью (десктоп)
+function handleMouseClick(productName) {
+    selectProduct(productName);
+}
+
+
+</script>
+</body>
+</html>
