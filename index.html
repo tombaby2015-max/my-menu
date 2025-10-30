@@ -1191,49 +1191,54 @@ function updateKbjuTableDisplay() {
             };
         }
 
-        function loadMenuFromTxt() {
-            if (Object.keys(kbjuTable).length === 0) {
-                alert('Сначала загрузите таблицу КБЖУ!');
-                return;
-            }
-            
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.accept = '.txt';
-            
-            fileInput.onchange = function(event) {
-                const file = event.target.files[0];
-                if (!file) return;
+       function loadMenuFromTxt() {
+    if (Object.keys(kbjuTable).length === 0) {
+        alert('Сначала загрузите таблицу КБЖУ!');
+        return;
+    }
+    
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.txt';
+    
+    fileInput.onchange = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const content = e.target.result;
+                const newMenuData = parseMenuTxtData(content);
                 
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const content = e.target.result;
-                        const newMenuData = parseMenuTxtData(content);
-                        
-                        Object.keys(newMenuData).forEach(day => {
-                            if (!menuData[day]) {
-                                menuData[day] = {};
-                            }
-                            Object.keys(newMenuData[day]).forEach(meal => {
-                                menuData[day][meal] = newMenuData[day][meal];
-                            });
-                        });
-                        
-                        showDayData(currentDay);
-                        saveData();
-                        
-                        alert('Меню успешно загружено!');
-                    } catch (error) {
-                        console.error('Ошибка загрузки меню:', error);
-                        alert('Ошибка при загрузке меню: ' + error.message);
+                Object.keys(newMenuData).forEach(day => {
+                    if (!menuData[day]) {
+                        menuData[day] = {};
                     }
-                };
-                reader.readAsText(file);
-            };
-            
-            fileInput.click();
-        }
+                    Object.keys(newMenuData[day]).forEach(meal => {
+                        menuData[day][meal] = newMenuData[day][meal];
+                    });
+                });
+                
+                showDayData(currentDay);
+                saveData();
+                
+                // ДОБАВЬТЕ ЭТИ 4 СТРОКИ:
+                saveToCloud().then(() => {
+                    console.log('✅ Меню сохранено в облако');
+                });
+                
+                alert('Меню успешно загружено!');
+            } catch (error) {
+                console.error('Ошибка загрузки меню:', error);
+                alert('Ошибка при загрузке меню: ' + error.message);
+            }
+        };
+        reader.readAsText(file);
+    };
+    
+    fileInput.click();
+}
 
         function showSuggestions(button, day, meal, index) {
             const existingDropdowns = document.querySelectorAll('.suggestions-dropdown');
@@ -1310,38 +1315,44 @@ function updateKbjuTableDisplay() {
         }
 
         function loadKbjuFromTxt() {
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.accept = '.txt';
-            
-            fileInput.onchange = function(event) {
-                const file = event.target.files[0];
-                if (!file) return;
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.txt';
+    
+    fileInput.onchange = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const content = e.target.result;
+                const newProductsCount = parseKbjuTxtData(content);
+                updateKbjuTableDisplay();
                 
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const content = e.target.result;
-                        const newProductsCount = parseKbjuTxtData(content);
-                        updateKbjuTableDisplay();
-                        
-                        const loadMenuBtn = document.getElementById('loadMenuBtn');
-                        if (loadMenuBtn) {
-                            loadMenuBtn.disabled = false;
-                        }
-                        
-                        saveData();
-                        alert('Таблица КБЖУ успешно загружена! Добавлено новых продуктов: ' + newProductsCount + '. Всего продуктов в таблице: ' + Object.keys(kbjuTable).length);
-                    } catch (error) {
-                        console.error('Ошибка загрузки:', error);
-                        alert('Ошибка при загрузке таблицы КБЖУ: ' + error.message);
-                    }
-                };
-                reader.readAsText(file);
-            };
-            
-            fileInput.click();
-        }
+                const loadMenuBtn = document.getElementById('loadMenuBtn');
+                if (loadMenuBtn) {
+                    loadMenuBtn.disabled = false;
+                }
+                
+                saveData();
+                
+                // ДОБАВЬТЕ ЭТИ 4 СТРОКИ:
+                saveToCloud().then(() => {
+                    console.log('✅ КБЖУ сохранено в облако');
+                });
+                
+                alert('Таблица КБЖУ успешно загружена! Добавлено новых продуктов: ' + newProductsCount + '. Всего продуктов в таблице: ' + Object.keys(kbjuTable).length);
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                alert('Ошибка при загрузке таблицы КБЖУ: ' + error.message);
+            }
+        };
+        reader.readAsText(file);
+    };
+    
+    fileInput.click();
+}
 
 function showTimeDropdown(element, day, meal) {
     const existingDropdowns = document.querySelectorAll('.time-dropdown');
@@ -1696,6 +1707,7 @@ function handleMouseClick(productName) {
 </script>
 </body>
 </html>
+
 
 
 
