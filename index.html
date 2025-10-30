@@ -584,11 +584,8 @@ async function saveToCloud() {
             lastUpdated: new Date().toISOString()
         };
         
-        const response = await fetch(CLOUD_STORAGE_URL, {
+        const response = await fetch(CLOUD_STORAGE_URL + '?action=save', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
             body: JSON.stringify(dataToSave)
         });
         
@@ -602,6 +599,7 @@ async function saveToCloud() {
         }
     } catch (error) {
         console.error('❌ Ошибка сохранения в облаке:', error);
+        // НЕ показываем alert при ошибке автосохранения
         return false;
     }
 }
@@ -611,18 +609,17 @@ async function loadFromCloud() {
     try {
         console.log('📥 Загрузка из облака...');
         
-        const response = await fetch(`${CLOUD_STORAGE_URL}?action=load`);
+        const response = await fetch(CLOUD_STORAGE_URL + '?action=load');
         const result = await response.json();
         
         if (result.success && result.data) {
             const savedData = JSON.parse(result.data);
             
-            // Восстанавливаем данные
             menuData = savedData.menuData || {};
             kbjuTable = savedData.kbjuTable || {};
             mealTimes = savedData.mealTimes || {};
             
-            console.log('✅ Данные загружены из облака:', result.timestamp);
+            console.log('✅ Данные загружены из облака');
             return true;
         } else {
             throw new Error(result.error || 'No data received');
@@ -1674,3 +1671,4 @@ function handleMouseClick(productName) {
 </script>
 </body>
 </html>
+
