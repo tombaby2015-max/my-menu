@@ -1223,10 +1223,12 @@ function updateKbjuTableDisplay() {
                 showDayData(currentDay);
                 saveData();
                 
-                // ДОБАВЬТЕ ЭТИ 4 СТРОКИ:
-                saveToCloud().then(() => {
-                    console.log('✅ Меню сохранено в облако');
-                });
+               // ДОБАВЬТЕ ЭТИ СТРОКИ:
+    saveToCloud().then(() => {
+        console.log('✅ Меню сохранено в облако');
+    }).catch(error => {
+        console.error('❌ Ошибка сохранения меню в облако:', error);
+    });
                 
                 alert('Меню успешно загружено!');
             } catch (error) {
@@ -1337,10 +1339,12 @@ function updateKbjuTableDisplay() {
                 
                 saveData();
                 
-                // ДОБАВЬТЕ ЭТИ 4 СТРОКИ:
-                saveToCloud().then(() => {
-                    console.log('✅ КБЖУ сохранено в облако');
-                });
+                   // ДОБАВЬТЕ ЭТИ СТРОКИ:
+    saveToCloud().then(() => {
+        console.log('✅ КБЖУ сохранено в облако');
+    }).catch(error => {
+        console.error('❌ Ошибка сохранения КБЖУ в облако:', error);
+    });
                 
                 alert('Таблица КБЖУ успешно загружена! Добавлено новых продуктов: ' + newProductsCount + '. Всего продуктов в таблице: ' + Object.keys(kbjuTable).length);
             } catch (error) {
@@ -1707,6 +1711,7 @@ function handleMouseClick(productName) {
 </script>
 </body>
 </html>
+
 
 
 
