@@ -585,8 +585,12 @@ function saveToCloud() {
             lastUpdated: new Date().toISOString()
         };
         
+        const jsonData = JSON.stringify(dataToSave);
+        console.log('Данные для сохранения:', jsonData.substring(0, 200) + '...');
+        
         // Создаем callback функцию
         window.cloudSaveCallback = function(response) {
+            console.log('Ответ от сохранения:', response);
             if (response.success) {
                 console.log('✅ Данные сохранены в облаке');
                 resolve(true);
@@ -596,9 +600,9 @@ function saveToCloud() {
             }
         };
         
-        // Создаем script тег для обхода CORS
+        // Используем POST запрос для больших данных
         const script = document.createElement('script');
-        script.src = `${CLOUD_STORAGE_URL}?action=save&callback=cloudSaveCallback&data=${encodeURIComponent(JSON.stringify(dataToSave))}`;
+        script.src = `${CLOUD_STORAGE_URL}?action=save&callback=cloudSaveCallback&data=${encodeURIComponent(jsonData)}`;
         document.head.appendChild(script);
     });
 }
@@ -1711,6 +1715,7 @@ function handleMouseClick(productName) {
 </script>
 </body>
 </html>
+
 
 
 
