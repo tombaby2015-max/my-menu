@@ -471,6 +471,13 @@ justify-content: center; align-items: center;">
             }
         };
 
+// === КОНФИГУРАЦИЯ ОБЛАЧНОГО ХРАНИЛИЩА ===
+const CLOUD_STORAGE_URL = 'https://script.google.com/macros/s/AKfycbxoQHnbuXTnOpr6aHtIGAFzZcO7MD-Dih8IgbFW8G6Dt9qXnwQs2ZXxbfdx-7j0cbnc/exec'; // Замените на ваш URL из шага 2.7
+
+// Флаги для управления автосохранением
+let autoSaveEnabled = true;
+let saveTimeout = null;
+
         // Таблица КБЖУ продуктов (эталонная)
         let kbjuTable = {};
 
@@ -546,12 +553,129 @@ let kbjuBtn;
             }
         }
 
-        function init() {
-            loadSavedData();
-            createDayNavigation();
-            showDayData(currentDay);
-            updateKbjuTableDisplay();
+// === ФУНКЦИИ АВТОСИНХРОНИЗАЦИИ ===
+
+// Автоматическое сохранение в облако (с задержкой)
+function autoSaveToCloud() {
+    if (!autoSaveEnabled) return;
+    
+    // Отменяем предыдущее отложенное сохранение
+    if (saveTimeout) {
+        clearTimeout(saveTimeout);
+    }
+    
+    // Сохраняем через 2 секунды (чтобы не спамить при частых изменениях)
+    saveTimeout = setTimeout(() => {
+        saveToCloud().catch(error => {
+            console.warn('Автосохранение не удалось:', error);
+        });
+    }, 2000);
+}
+
+// Сохранение в облако
+async function saveToCloud() {
+    try {
+        console.log('💾 Сохранение в облако...');
+        
+        const dataToSave = {
+            menuData: menuData,
+            kbjuTable: kbjuTable,
+            mealTimes: mealTimes,
+            lastUpdated: new Date().toISOString()
+        };
+        
+        const response = await fetch(CLOUD_STORAGE_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dataToSave)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('✅ Данные сохранены в облаке:', result.timestamp);
+            return true;
+        } else {
+            throw new Error(result.error);
         }
+    } catch (error) {
+        console.error('❌ Ошибка сохранения в облаке:', error);
+        return false;
+    }
+}
+
+// Загрузка из облака
+async function loadFromCloud() {
+    try {
+        console.log('📥 Загрузка из облака...');
+        
+        const response = await fetch(`${CLOUD_STORAGE_URL}?action=load`);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            const savedData = JSON.parse(result.data);
+            
+            // Восстанавливаем данные
+            menuData = savedData.menuData || {};
+            kbjuTable = savedData.kbjuTable || {};
+            mealTimes = savedData.mealTimes || {};
+            
+            console.log('✅ Данные загружены из облака:', result.timestamp);
+            return true;
+        } else {
+            throw new Error(result.error || 'No data received');
+        }
+    } catch (error) {
+        console.warn('⚠️ Не удалось загрузить из облака:', error);
+        return false;
+    }
+}
+
+// Автозагрузка при старте
+async function autoLoadFromCloud() {
+    const success = await loadFromCloud();
+    if (success) {
+        // Обновляем интерфейс с загруженными данными
+        loadSavedData();
+        showDayData(currentDay);
+        updateKbjuTableDisplay();
+        console.log('✅ Интерфейс обновлен с облачными данными');
+    }
+}
+
+        function init() {
+    console.log('🚀 Запуск приложения...');
+    
+    // Сначала пробуем загрузить из облака
+    autoLoadFromCloud().then(() => {
+        // Если не удалось загрузить из облака, используем локальные данные
+        loadSavedData();
+        createDayNavigation();
+        showDayData(currentDay);
+        updateKbjuTableDisplay();
+        
+        console.log('✅ Приложение запущено');
+    }).catch(error => {
+        // Если ошибка, используем только локальные данные
+        console.warn('Используем локальные данные:', error);
+        loadSavedData();
+        createDayNavigation();
+        showDayData(currentDay);
+        updateKbjuTableDisplay();
+    });
+    
+    // Сохраняем при закрытии страницы
+    window.addEventListener('beforeunload', function() {
+        if (autoSaveEnabled) {
+            // Сохраняем синхронно при закрытии
+            saveToCloud().catch(error => {
+                console.error('Ошибка сохранения при закрытии:', error);
+            });
+        }
+    });
+}
 
         function createDayNavigation() {
             const daysNav = document.getElementById('daysNav');
@@ -721,6 +845,7 @@ let kbjuBtn;
             }
             
             showDayData(currentDay);
+            autoSaveToCloud();
         }
 
 function addIngredient(day, meal) {
@@ -747,12 +872,14 @@ function addIngredient(day, meal) {
     
     saveData(); // ← Сохраняем изменения
     showDayData(currentDay);
+    autoSaveToCloud(); 
 }
         function deleteIngredient(day, meal, index) {
     if (confirm('Удалить этот ингредиент?')) {
         menuData[day][meal].ingredients.splice(index, 1);
         saveData(); // ← ДОБАВЬ ЭТУ СТРОКУ
         showDayData(currentDay);
+        autoSaveToCloud();
     }
 }
 
@@ -1244,6 +1371,7 @@ function showTimeDropdown(element, day, meal) {
             mealTimes[meal] = newTime;
             saveData();
             showDayData(currentDay);
+            autoSaveToCloud();
         }
 
         document.addEventListener('DOMContentLoaded', init);
@@ -1329,6 +1457,7 @@ function addNewProduct() {
     saveData();
     updateKbjuTableDisplay();
     hideAddProductModal();
+    autoSaveToCloud();
     
     alert('Продукт "' + name + '" успешно ' + (editingProduct ? 'обновлен' : 'добавлен') + '!');
 }
