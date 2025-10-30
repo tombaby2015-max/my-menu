@@ -573,8 +573,9 @@ function autoSaveToCloud() {
 }
 
 // Сохранение в облако
-async function saveToCloud() {
-    try {
+// Сохранение в облако через JSONP
+function saveToCloud() {
+    return new Promise((resolve, reject) => {
         console.log('💾 Сохранение в облако...');
         
         const dataToSave = {
@@ -584,54 +585,65 @@ async function saveToCloud() {
             lastUpdated: new Date().toISOString()
         };
         
-        const response = await fetch(CLOUD_STORAGE_URL + '?action=save', {
-            method: 'POST',
-            body: JSON.stringify(dataToSave)
-        });
+        // Создаем callback функцию
+        window.cloudSaveCallback = function(response) {
+            if (response.success) {
+                console.log('✅ Данные сохранены в облаке');
+                resolve(true);
+            } else {
+                console.error('❌ Ошибка сохранения:', response.error);
+                reject(new Error(response.error));
+            }
+        };
         
-        const result = await response.json();
-        
-        if (result.success) {
-            console.log('✅ Данные сохранены в облаке:', result.timestamp);
-            return true;
-        } else {
-            throw new Error(result.error);
-        }
-    } catch (error) {
-        console.error('❌ Ошибка сохранения в облаке:', error);
-        // НЕ показываем alert при ошибке автосохранения
-        return false;
-    }
+        // Создаем script тег для обхода CORS
+        const script = document.createElement('script');
+        script.src = `${CLOUD_STORAGE_URL}?action=save&callback=cloudSaveCallback&data=${encodeURIComponent(JSON.stringify(dataToSave))}`;
+        document.head.appendChild(script);
+    });
 }
 
-// Загрузка из облака
-async function loadFromCloud() {
-    try {
+// Загрузка из облака через JSONP
+function loadFromCloud() {
+    return new Promise((resolve, reject) => {
         console.log('📥 Загрузка из облака...');
-        console.log('URL:', CLOUD_STORAGE_URL);
         
-        const response = await fetch(CLOUD_STORAGE_URL + '?action=load');
-        console.log('Response status:', response.status);
+        // Создаем callback функцию
+        window.cloudLoadCallback = function(response) {
+            if (response.success && response.data) {
+                try {
+                    const savedData = JSON.parse(response.data);
+                    
+                    menuData = savedData.menuData || {};
+                    kbjuTable = savedData.kbjuTable || {};
+                    mealTimes = savedData.mealTimes || {};
+                    
+                    console.log('✅ Данные загружены из облака');
+                    resolve(true);
+                } catch (error) {
+                    console.error('❌ Ошибка парсинга данных:', error);
+                    reject(error);
+                }
+            } else {
+                console.warn('⚠️ Нет данных в облаке или ошибка:', response.error);
+                resolve(false); // Не reject, а resolve(false) чтобы продолжить с локальными данными
+            }
+        };
         
-        const result = await response.json();
-        console.log('Result:', result);
+        // Создаем script тег для обхода CORS
+        const script = document.createElement('script');
+        script.src = `${CLOUD_STORAGE_URL}?action=load&callback=cloudLoadCallback`;
+        document.head.appendChild(script);
         
-        if (result.success && result.data) {
-            const savedData = JSON.parse(result.data);
-            
-            menuData = savedData.menuData || {};
-            kbjuTable = savedData.kbjuTable || {};
-            mealTimes = savedData.mealTimes || {};
-            
-            console.log('✅ Данные загружены из облака');
-            return true;
-        } else {
-            throw new Error(result.error || 'No data received');
-        }
-    } catch (error) {
-        console.warn('⚠️ Не удалось загрузить из облака:', error);
-        return false;
-    }
+        // Таймаут на случай если скрипт не загрузится
+        setTimeout(() => {
+            if (script.parentNode) {
+                script.parentNode.removeChild(script);
+            }
+            console.log('⚠️ Таймаут загрузки из облака');
+            resolve(false);
+        }, 5000);
+    });
 }
 
 // Автозагрузка при старте
@@ -1680,5 +1692,6 @@ function handleMouseClick(productName) {
 </script>
 </body>
 </html>
+
 
 
